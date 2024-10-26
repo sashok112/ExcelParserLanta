@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 from openpyxl import load_workbook
-
 def get_column(df, possible_names, default_value=None):
     """
     Возвращает значение столбца, если он существует, или заполняет столбец значением по умолчанию.
