@@ -55,7 +55,6 @@ output_file = './обработанные_данные.xlsx'
 sheet_name = 'Sheet1'
 
 book = load_workbook(output_file)
-
 if sheet_name in book.sheetnames:
     existing_df = pd.read_excel(output_file, sheet_name=sheet_name)
     updated_df = pd.concat([existing_df, processed_df], ignore_index=True)
