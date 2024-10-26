@@ -24,7 +24,6 @@ def process_file(file_path):
         # Загружаем данные
         df = pd.read_excel(file_path)
         df.columns = [col.strip().lower() for col in df.columns]
-
         # Получаем название файла для столбца "Поставщик"
         manufacturer = os.path.splitext(os.path.basename(file_path))[0]
 
