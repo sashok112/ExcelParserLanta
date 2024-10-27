@@ -1,9 +1,7 @@
-
-
-
 import pandas as pd
 import os
-from openpyxl import load_workbook
+
+
 def get_column(df, possible_names, default_value=None):
     """
     Возвращает значение столбца, если он существует, или заполняет столбец значением по умолчанию.
@@ -48,29 +46,54 @@ def process_file(file_path):
         print(f"Ошибка при обработке файла {file_path}: {e}")
         return pd.DataFrame()
 
+def parse_E2E4(file_path_input, file_path_output):
+    process_file(file_path_input).to_excel(file_path_output, index=False)
+    print(f"Обработка завершена. Данные сохранены в '{file_path_output}'.")
+
+def parse_ZipZip(file_path_input, file_path_output):
+    process_file(file_path_input).to_excel(file_path_output, index=False)
+    print(f"Обработка завершена. Данные сохранены в '{file_path_output}'.")
+
+def parse_Bulat(file_path_input, file_path_output, start_pos=0):
+    manufacturer = os.path.splitext(os.path.basename(file_path))[0]
+    ids = {"Поставщик": manufacturer,
+                "Вендор": None,
+                "Артикул": 0,
+                "Наименование": 1,
+                "Стоимость": 2,
+                "Ресурс печати": None,
+                "Количество на складе": None,
+                "Склад": "Москва"}
+
+    outputData = {"Поставщик": [],
+           "Вендор": [],
+           "Артикул": [],
+           "Наименование": [],
+           "Стоимость": [],
+           "Ресурс печати": [],
+           "Количество на складе": [],
+           "Склад": []}
+    df_inp = pd.read_excel(file_path_input)
+
+    counter = 1
+    for row in df_inp.iterrows():
+        if counter >= start_pos:
+            if str(row[1].iloc[0]) == "nan":
+                ids["Вендор"] = str(row[1].iloc[ids["Наименование"]])
+                continue
+            for i in ids:
+                if isinstance(ids[i], int):
+                    outputData[i].append(row[1].iloc[ids[i]])
+                else:
+                    outputData[i].append(ids[i])
+        counter += 1
+    df_out = pd.DataFrame.from_dict(outputData)
+    df_out.to_excel(file_path_output, index=False)
+    print(f"Обработка завершена. Данные сохранены в '{file_path_output}'.")
+
+
+
 # Основной процесс обработки всех файлов
-file_path = 'vendorData/Прайс ZipZip Оригинад.xlsx'
-processed_df = process_file(file_path)
+file_path = 'vendorData/ТД Булат.xls'
 output_file = './обработанные_данные.xlsx'
-sheet_name = 'Sheet1'
-
-book = load_workbook(output_file)
-if sheet_name in book.sheetnames:
-    existing_df = pd.read_excel(output_file, sheet_name=sheet_name)
-    updated_df = pd.concat([existing_df, processed_df], ignore_index=True)
-    with pd.ExcelWriter(output_file, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-        updated_df.to_excel(writer, sheet_name=sheet_name, index=False)
-else:
-    print(f"Лист '{sheet_name}' не найден в файле.")
-
-
-
-print(f"Обработка завершена. Данные сохранены в '{output_file}'.")
-
-
-
-
-
-
-
-
+parse_Bulat(file_path, output_file)
