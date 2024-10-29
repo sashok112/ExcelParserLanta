@@ -1,58 +1,63 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(387, 224)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName("gridLayout")
-
-        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setObjectName("lineEdit")
-        self.lineEdit.setReadOnly(True)
-
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setObjectName("label")
-
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton.clicked.connect(self.open_file)
-
-        self.gridLayout.addWidget(self.lineEdit, 0, 1, 1, 1)
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.gridLayout.addWidget(self.pushButton, 0, 2, 1, 1)
-
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 387, 21))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label.setText(_translate("MainWindow", "Select output file"))
-        self.pushButton.setText(_translate("MainWindow", "..."))
-
-    def open_file(self):
-        self.file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Open", "", "CSV Files (*.csv)")
-        if self.file_name[0] != '':
-            self.lineEdit.setText(self.file_name[0])
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+import sys
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+class Window(QMainWindow):
+
+    def __init__(self):
+        super().__init__()
+
+        # setting title
+        self.setWindowTitle("Python ")
+
+        # setting geometry
+        self.setGeometry(100, 100, 600, 400)
+
+        # calling method
+        self.UiComponents()
+
+        # showing all the widgets
+        self.show()
+
+    # method for widgets
+    def UiComponents(self):
+        # creating a combo box widget
+        self.combo_box = QComboBox(self)
+
+        # setting geometry of combo box
+        self.combo_box.setGeometry(200, 150, 120, 30)
+
+        # geek list
+        geek_list = ["Geek", "Geeky Geek"]
+
+        # adding list of items to combo box
+        self.combo_box.addItems(geek_list)
+
+        # creating editable combo box
+        self.combo_box.setEditable(True)
+
+        # setting insertion policy
+        # stopping insertion
+        self.combo_box.setInsertPolicy(QComboBox.NoInsert)
+
+        # getting current insertion policy
+        policy = self.combo_box.insertPolicy()
+
+        # creating label to  print the policy
+        label = QLabel("Insertion policy = " + str(policy), self)
+
+        # setting geometry of the label
+        label.setGeometry(200, 100, 200, 30)
+
+
+# create pyqt5 app
+App = QApplication(sys.argv)
+
+# create the instance of our Window
+window = Window()
+
+# start the app
+sys.exit(App.exec())

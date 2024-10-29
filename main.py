@@ -1,6 +1,24 @@
 import pandas as pd
 import os
+import sys
+from PyQt6 import uic  # Импортируем uic
+from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 
+LIST_PRICES=["E2E4", "ТД Булат", "ZipZip"]
+class MyWidget(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        uic.loadUi('mainWindow.ui', self)  # Загружаем дизайн
+        self.SelectFile.clicked.connect(self.open_file)
+        geek_list = ["Geek", "Geeky Geek"]
+
+        # adding list of items to combo box
+        self.comboBox.addItems(LIST_PRICES)
+
+    def open_file(self):
+        self.file_name = QFileDialog.getOpenFileName(None, "Open", "")
+        if self.file_name[0] != '':
+            self.filePath.setText(self.file_name[0])
 
 def get_column(df, possible_names, default_value=None):
     """
@@ -10,16 +28,12 @@ def get_column(df, possible_names, default_value=None):
         if name in df.columns:
             return df[name]
     return pd.Series([default_value] * len(df))
-
 def get_price(df):
     return get_column(df, ['оптовая цена, руб.', 'ценв rub', 'цена, руб', 'розница руб.', 'цена партнера', 'price'], None)
-
 def get_vendor(df):
     return get_column(df, ['марка', 'производитель', 'бренд'], 'Не указан')
-
 def get_sklad(df):
     return get_column(df, ['город', 'склад'], 'Москва')
-
 def process_file(file_path):
     try:
         # Загружаем данные
@@ -62,7 +76,7 @@ def parse_Bulat(file_path_input, file_path_output, start_pos=0):
                 "Наименование": 1,
                 "Стоимость": 2,
                 "Ресурс печати": None,
-                "Количество на складе": None,
+                "Количество на складе": "888",
                 "Склад": "Москва"}
 
     outputData = {"Поставщик": [],
@@ -92,8 +106,11 @@ def parse_Bulat(file_path_input, file_path_output, start_pos=0):
     print(f"Обработка завершена. Данные сохранены в '{file_path_output}'.")
 
 
-
-# Основной процесс обработки всех файлов
-file_path = 'vendorData/ТД Булат.xls'
-output_file = './обработанные_данные.xlsx'
-parse_Bulat(file_path, output_file)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ex = MyWidget()
+    ex.show()
+    sys.exit(app.exec())
+    file_path = 'vendorData/ТД Булат.xls'
+    output_file = './обработанные_данные.xlsx'
+    parse_Bulat(file_path, output_file)
