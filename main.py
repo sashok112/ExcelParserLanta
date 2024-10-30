@@ -14,7 +14,7 @@ class MyWidget(QMainWindow):
         super().__init__()
         uic.loadUi('mainWindow.ui', self)  # Загружаем дизайн
         self.status_bar = self.statusBar()
-        self.status_bar.showMessage('Ready', 2000)
+        self.status_bar.showMessage('Ready')
         self.SelectFile.clicked.connect(self.open_file)
         self.RunScript.clicked.connect(self.process_parse)
         self.comboBox.addItems(LIST_PRICES)
@@ -51,14 +51,13 @@ class MyWidget(QMainWindow):
                 self.t1.start()
             elif self.comboBox.currentIndex() == 3:
                 self.t1 = threading.Thread(target=self.parse_ZipZip, args=(self.filePath.text(), FILE_OUTPUT,
-                                                                          float(self.KursEdit.text())), daemon=True)
+                                                                           float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
 
     def parse_E2E4(self, file_path_input, file_path_output):
         process_file(file_path_input).to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
-
 
     def parse_Bulat(self, file_path_input, file_path_output, kurs, start_pos=10):
         manufacturer = "ТД Булат"
@@ -150,6 +149,7 @@ class MyWidget(QMainWindow):
         df_out.to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
+
 
 def get_column(df, possible_names, default_value=None):
     """
