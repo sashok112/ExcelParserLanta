@@ -1,63 +1,63 @@
-from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-import sys
+import pandas as pd
+import glob
+import os
 
+data_folder = './vendorData'
+files = glob.glob(os.path.join(data_folder, '*.xlsx'))
 
-class Window(QMainWindow):
+def get_column(df, possible_names, default_value=None):
+    """
+    Возвращает значение столбца, если он существует, или заполняет столбец значением по умолчанию.
+    """
+    for name in possible_names:
+        if name in df.columns:
+            return df[name]
+    return pd.Series([default_value] * len(df))
 
-    def __init__(self):
-        super().__init__()
+def get_price(df):
+    return get_column(df, ['оптовая цена, руб.', 'ценв rub', 'цена, руб', 'розница руб.', 'цена партнера', 'price'], None)
 
-        # setting title
-        self.setWindowTitle("Python ")
+def get_vendor(df):
+    return get_column(df, ['марка', 'производитель', 'бренд'], 'Не указан')
 
-        # setting geometry
-        self.setGeometry(100, 100, 600, 400)
+def get_sklad(df):
+    return get_column(df, ['город', 'склад'], 'Москва')
 
-        # calling method
-        self.UiComponents()
+def process_file(file_path):
+    try:
+        # Загружаем данные
+        df = pd.read_excel(file_path)
+        df.columns = [col.strip().lower() for col in df.columns]
 
-        # showing all the widgets
-        self.show()
+        # Получаем название файла для столбца "Поставщик"
+        manufacturer = os.path.splitext(os.path.basename(file_path))[0]
 
-    # method for widgets
-    def UiComponents(self):
-        # creating a combo box widget
-        self.combo_box = QComboBox(self)
+        # Заполняем необходимые столбцы
+        df['Стоимость'] = get_price(df)
+        df['Поставщик'] = manufacturer
+        df['Вендор'] = get_vendor(df)
+        df['Артикул'] = get_column(df, ['артикул'], 'Не указан')
+        df['Наименование'] = get_column(df, ['наименование'], 'Не указано')
+        df['Ресурс печати'] = get_column(df, ['макс кол-во отпечатков'], 0)
+        df['Количество на складе'] = get_column(df, ['кол-во', 'наличие'], 0)
+        df['Склад'] = get_sklad(df)
 
-        # setting geometry of combo box
-        self.combo_box.setGeometry(200, 150, 120, 30)
+        # Выбираем только нужные столбцы
+        result_df = df[['Поставщик', 'Вендор', 'Артикул', 'Наименование', 'Стоимость',
+                        'Ресурс печати', 'Количество на складе', 'Склад']]
+        return result_df
+    except Exception as e:
+        print(f"Ошибка при обработке файла {file_path}: {e}")
+        return pd.DataFrame()
 
-        # geek list
-        geek_list = ["Geek", "Geeky Geek"]
+# Основной процесс обработки всех файлов
+final_df = pd.DataFrame()
 
-        # adding list of items to combo box
-        self.combo_box.addItems(geek_list)
+for file in files:
+    processed_df = process_file(file)
+    final_df = pd.concat([final_df, processed_df], ignore_index=True)
 
-        # creating editable combo box
-        self.combo_box.setEditable(True)
-
-        # setting insertion policy
-        # stopping insertion
-        self.combo_box.setInsertPolicy(QComboBox.NoInsert)
-
-        # getting current insertion policy
-        policy = self.combo_box.insertPolicy()
-
-        # creating label to  print the policy
-        label = QLabel("Insertion policy = " + str(policy), self)
-
-        # setting geometry of the label
-        label.setGeometry(200, 100, 200, 30)
-
-
-# create pyqt5 app
-App = QApplication(sys.argv)
-
-# create the instance of our Window
-window = Window()
-
-# start the app
-sys.exit(App.exec())
+# Сохраняем результат в Excel
+output_file = './обработанные_данные.xlsx'
+final_df.to_excel(output_file, index=False)
+print(f"Обработка завершена. Данные сохранены в '{output_file}'.")
