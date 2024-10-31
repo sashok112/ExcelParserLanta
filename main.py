@@ -5,7 +5,7 @@ from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 import threading
 
-LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip"]
+LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip", "Новые Айти-Решения"]
 FILE_OUTPUT = "./output.xlsx"
 
 
@@ -53,9 +53,51 @@ class MyWidget(QMainWindow):
                 self.t1 = threading.Thread(target=self.parse_ZipZip, args=(self.filePath.text(), FILE_OUTPUT,
                                                                            float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
+            elif self.comboBox.currentIndex() == 4:
+                self.t1 = threading.Thread(target=self.parse_It_Solutions, args=(self.filePath.text(), FILE_OUTPUT,
+                                                                                 float(self.KursEdit.text())),
+                                           daemon=True)
+                self.t1.start()
 
     def parse_E2E4(self, file_path_input, file_path_output):
         process_file(file_path_input).to_excel(file_path_output, index=False)
+        self.changeColourBar("(0,255,0,255)")
+        self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
+
+    def parse_It_Solutions(self, file_path_input, file_path_output, kurs, start_pos=1):
+        manufacturer = "Новые Айти-решения"
+        ids = {"Поставщик": manufacturer,
+               "Вендор": 2,
+               "Артикул": 0,
+               "Наименование": 1,
+               "Стоимость": 3,
+               "Ресурс печати": None,
+               "Количество на складе": 4,
+               "Склад": "Москва"}
+
+        outputData = {"Поставщик": [],
+                      "Вендор": [],
+                      "Артикул": [],
+                      "Наименование": [],
+                      "Стоимость": [],
+                      "Ресурс печати": [],
+                      "Количество на складе": [],
+                      "Склад": []}
+        df_inp = pd.read_excel(file_path_input)
+        counter = 1
+        for row in df_inp.iterrows():
+            if counter >= start_pos:
+                for i in ids:
+                    if isinstance(ids[i], int):
+                        if i == "Стоимость":
+                            outputData[i].append(float(row[1].iloc[ids[i]]) * kurs)
+                        else:
+                            outputData[i].append(row[1].iloc[ids[i]])
+                    else:
+                        outputData[i].append(ids[i])
+            counter += 1
+        df_out = pd.DataFrame.from_dict(outputData)
+        df_out.to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
