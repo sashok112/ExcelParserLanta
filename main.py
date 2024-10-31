@@ -5,6 +5,7 @@ from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 import threading
 
+# Список который отображается в выпадающем списке, те которые мы обрабатываем
 LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip", "Новые Айти-Решения"]
 FILE_OUTPUT = "./output.xlsx"
 
@@ -30,7 +31,8 @@ class MyWidget(QMainWindow):
 
     def process_parse(self):  # Основная функция для обработки файлов по алогиртмам
         """
-        Проверки на корректность и полноту всей вводимой информации|Вывод ошибок
+        Проверяет наличие необходимой информации перед обработкой.
+        В случае отсутствия данных отображает ошибки в статус-баре.
         """
         if self.filePath.text() == '':
             self.changeColourBar("(255,0,0,255)")
@@ -42,8 +44,12 @@ class MyWidget(QMainWindow):
             self.changeColourBar("(255,0,0,255)")
             self.status_bar.showMessage('Не указан поставщик')
         else:
+            # Если все данные введены корректно, запускается обработка файла
             self.changeColourBar("(255,255,0,255)")
             self.status_bar.showMessage('Выполняется...')
+            """
+            ComboBox выпадающий список проеряем айди и на каждый элемент запускаем соответсвующий скрипт
+            """
             if self.comboBox.currentIndex() == 1:  # E2E4
                 self.t1 = threading.Thread(target=self.parse_E2E4, args=(self.filePath.text(), FILE_OUTPUT,),
                                            daemon=True)
@@ -63,12 +69,15 @@ class MyWidget(QMainWindow):
                 self.t1.start()
 
     def parse_E2E4(self, file_path_input, file_path_output):
+        # Специфическая обработка для поставщика Е2Е4
         process_file(file_path_input).to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
     def parse_It_Solutions(self, file_path_input, file_path_output, kurs, start_pos=1):
+        # Специфическая обработка для поставщика Новые Айти-решения
         manufacturer = "Новые Айти-решения"
+        # Словарь где хранятся айди каждого из столбцов
         ids = {"Поставщик": manufacturer,
                "Вендор": 2,
                "Артикул": 0,
@@ -77,7 +86,7 @@ class MyWidget(QMainWindow):
                "Ресурс печати": None,
                "Количество на складе": 4,
                "Склад": "Москва"}
-
+        # Словарь где будут хранится данные выгруженные из файла
         outputData = {"Поставщик": [],
                       "Вендор": [],
                       "Артикул": [],
@@ -86,11 +95,13 @@ class MyWidget(QMainWindow):
                       "Ресурс печати": [],
                       "Количество на складе": [],
                       "Склад": []}
+        # читаем файл в датафрейм
         df_inp = pd.read_excel(file_path_input)
         counter = 1
+        # читаем его построчно
         for row in df_inp.iterrows():
-            if counter >= start_pos:
-                for i in ids:
+            if counter >= start_pos:  # проверяем на начало не с первой строки
+                for i in ids:  # выбираем данные из столбцов, обрабатываем и добавляем в словарь
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             outputData[i].append(float(row[1].iloc[ids[i]]) * kurs)
@@ -99,13 +110,15 @@ class MyWidget(QMainWindow):
                     else:
                         outputData[i].append(ids[i])
             counter += 1
-        df_out = pd.DataFrame.from_dict(outputData)
+        df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
         df_out.to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
-        self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
+        self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")  # Меняем статус бар на обработаный
 
     def parse_Bulat(self, file_path_input, file_path_output, kurs, start_pos=10):
+        # Специфическая обработка для поставщика ТД булат
         manufacturer = "ТД Булат"
+        # Словарь где хранятся айди каждого из столбцов
         ids = {"Поставщик": manufacturer,
                "Вендор": None,
                "Артикул": 0,
@@ -114,7 +127,7 @@ class MyWidget(QMainWindow):
                "Ресурс печати": None,
                "Количество на складе": "888",
                "Склад": "Москва"}
-
+        # Словарь где будут хранится данные выгруженные из файла
         outputData = {"Поставщик": [],
                       "Вендор": [],
                       "Артикул": [],
@@ -123,15 +136,20 @@ class MyWidget(QMainWindow):
                       "Ресурс печати": [],
                       "Количество на складе": [],
                       "Склад": []}
+        # читаем файл в датафрейм
         df_inp = pd.read_excel(file_path_input)
-
         counter = 1
+        # читаем его построчно
         for row in df_inp.iterrows():
-            if counter >= start_pos:
+            if counter >= start_pos:  # проверяем на начало не с первой строки
+                """
+                Если мы нашли пустой артикул значит это объединенная строчка
+                От сюда мы можем записать вендор и использовать его до следующей объединенной строчки
+                """
                 if str(row[1].iloc[0]) == "nan":
                     ids["Вендор"] = str(row[1].iloc[ids["Наименование"]])
                     continue
-                for i in ids:
+                for i in ids:  # выбираем данные из столбцов, обрабатываем и добавляем в словарь
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             outputData[i].append(float(row[1].iloc[ids[i]]) * kurs)
@@ -145,13 +163,15 @@ class MyWidget(QMainWindow):
                         else:
                             outputData[i].append(ids[i])
             counter += 1
-        df_out = pd.DataFrame.from_dict(outputData)
+        df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
         df_out.to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
     def parse_ZipZip(self, file_path_input, file_path_output, kurs, start_pos=3):
+        # Специфическая обработка для поставщика ZipZip
         manufacturer = "ZipZip"
+        # Словарь где хранятся айди каждого из столбцов
         ids = {"Поставщик": manufacturer,
                "Вендор": 0,
                "Артикул": 1,
@@ -160,7 +180,7 @@ class MyWidget(QMainWindow):
                "Ресурс печати": None,
                "Количество на складе": 9,
                "Склад": "Москва"}
-
+        # Словарь где будут хранится данные выгруженные из файла
         outputData = {"Поставщик": [],
                       "Вендор": [],
                       "Артикул": [],
@@ -170,11 +190,12 @@ class MyWidget(QMainWindow):
                       "Количество на складе": [],
                       "Склад": []}
         df_inp = pd.read_excel(file_path_input)
-
+        # читаем файл в датафрейм
         counter = 1
+        # читаем его построчно
         for row in df_inp.iterrows():
             if counter >= start_pos:
-                for i in ids:
+                for i in ids:  # выбираем данные из столбцов, обрабатываем и добавляем в словарь
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             outputData[i].append(float(str(row[1].iloc[ids[i]])))
@@ -190,7 +211,7 @@ class MyWidget(QMainWindow):
                     else:
                         outputData[i].append(ids[i])
             counter += 1
-        df_out = pd.DataFrame.from_dict(outputData)
+        df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
         df_out.to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
