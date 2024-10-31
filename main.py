@@ -14,21 +14,24 @@ class MyWidget(QMainWindow):
         super().__init__()
         uic.loadUi('mainWindow.ui', self)  # Загружаем дизайн
         self.status_bar = self.statusBar()
-        self.status_bar.showMessage('Ready')
+        self.status_bar.showMessage('Ready')  # Меняем статус бар для отображения готовности
         self.SelectFile.clicked.connect(self.open_file)
         self.RunScript.clicked.connect(self.process_parse)
         self.comboBox.addItems(LIST_PRICES)
 
-    def changeColourBar(self, color=("(255,0,0,255)")):
+    def changeColourBar(self, color=("(255,0,0,255)")):  # Функция для смена цвета статус бара
         self.status_bar.setStyleSheet(
             "QStatusBar{padding-left:8px;background:rgba" + color + ";color:black;font-weight:bold;}")
 
-    def open_file(self):
+    def open_file(self):  # Функция для открытия файла и записи пути к нему
         self.file_name = QFileDialog.getOpenFileName(None, "Open", "")
         if self.file_name[0] != '':
             self.filePath.setText(self.file_name[0])
 
-    def process_parse(self):
+    def process_parse(self):  # Основная функция для обработки файлов по алогиртмам
+        """
+        Проверки на корректность и полноту всей вводимой информации|Вывод ошибок
+        """
         if self.filePath.text() == '':
             self.changeColourBar("(255,0,0,255)")
             self.status_bar.showMessage('Не указан путь к файлу')
@@ -41,19 +44,19 @@ class MyWidget(QMainWindow):
         else:
             self.changeColourBar("(255,255,0,255)")
             self.status_bar.showMessage('Выполняется...')
-            if self.comboBox.currentIndex() == 1:
+            if self.comboBox.currentIndex() == 1:  # E2E4
                 self.t1 = threading.Thread(target=self.parse_E2E4, args=(self.filePath.text(), FILE_OUTPUT,),
                                            daemon=True)
                 self.t1.start()
-            elif self.comboBox.currentIndex() == 2:
+            elif self.comboBox.currentIndex() == 2:  # Bullat
                 self.t1 = threading.Thread(target=self.parse_Bulat, args=(self.filePath.text(), FILE_OUTPUT,
                                                                           float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
-            elif self.comboBox.currentIndex() == 3:
+            elif self.comboBox.currentIndex() == 3:  # ZipZip
                 self.t1 = threading.Thread(target=self.parse_ZipZip, args=(self.filePath.text(), FILE_OUTPUT,
                                                                            float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
-            elif self.comboBox.currentIndex() == 4:
+            elif self.comboBox.currentIndex() == 4:  # NewItSolutions
                 self.t1 = threading.Thread(target=self.parse_It_Solutions, args=(self.filePath.text(), FILE_OUTPUT,
                                                                                  float(self.KursEdit.text())),
                                            daemon=True)
@@ -203,19 +206,6 @@ def get_column(df, possible_names, default_value=None):
     return pd.Series([default_value] * len(df))
 
 
-def get_price(df):
-    return get_column(df, ['оптовая цена, руб.', 'ценв rub', 'цена, руб', 'розница руб.', 'цена партнера', 'price'],
-                      None)
-
-
-def get_vendor(df):
-    return get_column(df, ['марка', 'производитель', 'бренд'], 'Не указан')
-
-
-def get_sklad(df):
-    return get_column(df, ['город', 'склад'], 'Москва')
-
-
 def process_file(file_path):
     try:
         # Загружаем данные
@@ -225,14 +215,15 @@ def process_file(file_path):
         manufacturer = os.path.splitext(os.path.basename(file_path))[0]
 
         # Заполняем необходимые столбцы
-        df['Стоимость'] = get_price(df)
+        df['Стоимость'] = get_column(df, ['оптовая цена, руб.', 'ценв rub', 'цена, руб',
+                                          'розница руб.', 'цена партнера', 'price'], None)
         df['Поставщик'] = manufacturer
-        df['Вендор'] = get_vendor(df)
+        df['Вендор'] = get_column(df, ['марка', 'производитель', 'бренд'], 'Не указан')
         df['Артикул'] = get_column(df, ['артикул', 'арт.'], 'Не указан')
         df['Наименование'] = get_column(df, ['наименование', 'описание'], 'Не указано')
         df['Ресурс печати'] = get_column(df, ['макс кол-во отпечатков'], 0)
         df['Количество на складе'] = get_column(df, ['кол-во', 'наличие'], 0)
-        df['Склад'] = get_sklad(df)
+        df['Склад'] = get_column(df, ['город', 'склад'], 'Москва')
 
         # Выбираем только нужные столбцы
         result_df = df[['Поставщик', 'Вендор', 'Артикул', 'Наименование', 'Стоимость',
