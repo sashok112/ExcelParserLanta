@@ -4,16 +4,17 @@ import sys
 from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 import threading
+from mainWindow import Ui_MainWindow
 
 # Список который отображается в выпадающем списке, те которые мы обрабатываем
 LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip", "Новые Айти-Решения"]
 FILE_OUTPUT = "./output.xlsx"
 
 
-class MyWidget(QMainWindow):
+class MyWidget(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi('mainWindow.ui', self)  # Загружаем дизайн
+        self.setupUi(self)
         self.status_bar = self.statusBar()
         self.status_bar.showMessage('Ready')  # Меняем статус бар для отображения готовности
         self.SelectFile.clicked.connect(self.open_file)
@@ -225,7 +226,6 @@ def get_column(df, possible_names, default_value=None):
         if name in df.columns:
             return df[name]
     return pd.Series([default_value] * len(df))
-
 
 def process_file(file_path):
     try:
