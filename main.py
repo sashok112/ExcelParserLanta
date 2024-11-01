@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import sys
-from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 import threading
 from mainWindow import Ui_MainWindow
@@ -52,19 +51,21 @@ class MyWidget(QMainWindow, Ui_MainWindow):
             ComboBox выпадающий список проеряем айди и на каждый элемент запускаем соответсвующий скрипт
             """
             if self.comboBox.currentIndex() == 1:  # E2E4
-                self.t1 = threading.Thread(target=self.parse_E2E4, args=(self.filePath.text(), FILE_OUTPUT,),
+                self.t1 = threading.Thread(target=self.parse_E2E4, args=(self.filePath.text(), "./outputE2E4.xlsx",),
                                            daemon=True)
                 self.t1.start()
-            elif self.comboBox.currentIndex() == 2:  # Bullat
-                self.t1 = threading.Thread(target=self.parse_Bulat, args=(self.filePath.text(), FILE_OUTPUT,
+            elif self.comboBox.currentIndex() == 2:  # Bulat
+                self.t1 = threading.Thread(target=self.parse_Bulat, args=(self.filePath.text(), "./outputBulat.xlsx",
                                                                           float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
             elif self.comboBox.currentIndex() == 3:  # ZipZip
-                self.t1 = threading.Thread(target=self.parse_ZipZip, args=(self.filePath.text(), FILE_OUTPUT,
+                self.t1 = threading.Thread(target=self.parse_ZipZip, args=(self.filePath.text(),
+                                                                           "./outputZipZip.xlsx",
                                                                            float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
             elif self.comboBox.currentIndex() == 4:  # NewItSolutions
-                self.t1 = threading.Thread(target=self.parse_It_Solutions, args=(self.filePath.text(), FILE_OUTPUT,
+                self.t1 = threading.Thread(target=self.parse_It_Solutions, args=(self.filePath.text(),
+                                                                                 "./outputNewItSolutions.xlsx",
                                                                                  float(self.KursEdit.text())),
                                            daemon=True)
                 self.t1.start()
@@ -106,6 +107,13 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             outputData[i].append(float(row[1].iloc[ids[i]]) * kurs)
+                        elif i == "Количество на складе":
+                            try:
+                                outputData[i].append(int(row[1].iloc[ids[i]]))
+                            except:
+                                outputData[i].append(888)
+
+
                         else:
                             outputData[i].append(row[1].iloc[ids[i]])
                     else:
@@ -200,8 +208,10 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             outputData[i].append(float(str(row[1].iloc[ids[i]])))
+                            # Преобразуем цену в численный тип данных, для корректного добавления в БД
                         elif i == "Наименование":
                             outputData[i].append(str(row[1].iloc[ids[i]]).replace("=", "-"))
+                            # Заменим = на - во избежании ошибок в выходном эксель файле
                         elif i == "Количество на складе":
                             if row[1].iloc[ids[i]] == "+":
                                 outputData[i].append(1)
@@ -222,10 +232,11 @@ def get_column(df, possible_names, default_value=None):
     """
     Возвращает значение столбца, если он существует, или заполняет столбец значением по умолчанию.
     """
-    for name in possible_names:
+    for name in possible_names:  # Проверяем имя в списке имен
         if name in df.columns:
             return df[name]
     return pd.Series([default_value] * len(df))
+
 
 def process_file(file_path):
     try:
