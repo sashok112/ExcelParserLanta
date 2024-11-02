@@ -3,6 +3,7 @@ import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 import threading
+import numpy as np
 from mainWindow import Ui_MainWindow
 
 # Список который отображается в выпадающем списке, те которые мы обрабатываем
@@ -205,9 +206,13 @@ class MyWidget(QMainWindow, Ui_MainWindow):
         for row in df_inp.iterrows():
             if counter >= start_pos:
                 for i in ids:  # выбираем данные из столбцов, обрабатываем и добавляем в словарь
+
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
-                            outputData[i].append(float(str(row[1].iloc[ids[i]])))
+                            try:
+                                outputData[i].append(float(row[1].iloc[ids[i]]))
+                            except:
+                                outputData[i].append(0)
                             # Преобразуем цену в численный тип данных, для корректного добавления в БД
                         elif i == "Наименование":
                             outputData[i].append(str(row[1].iloc[ids[i]]).replace("=", "-"))
@@ -255,8 +260,9 @@ def process_file(file_path):
         df['Наименование'] = get_column(df, ['наименование', 'описание'], 'Не указано')
         df['Ресурс печати'] = get_column(df, ['макс кол-во отпечатков'], 0)
         df['Количество на складе'] = get_column(df, ['кол-во', 'наличие'], 0)
+        df['Количество на складе'] =  df['Количество на складе'].fillna(888)
         df['Склад'] = get_column(df, ['город', 'склад'], 'Москва')
-
+        print(df['Количество на складе'])
         # Выбираем только нужные столбцы
         result_df = df[['Поставщик', 'Вендор', 'Артикул', 'Наименование', 'Стоимость',
                         'Ресурс печати', 'Количество на складе', 'Склад']]
