@@ -3,7 +3,6 @@ import os
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 import threading
-import numpy as np
 from mainWindow import Ui_MainWindow
 
 # Список который отображается в выпадающем списке, те которые мы обрабатываем
