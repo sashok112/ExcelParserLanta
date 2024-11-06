@@ -86,7 +86,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                "Артикул": 0,
                "Наименование": 1,
                "Стоимость": 3,
-               "Ресурс печати": None,
+               "Ресурс печати": "0",
                "Количество на складе": 4,
                "Склад": "Москва"}
         # Словарь где будут хранится данные выгруженные из файла
@@ -113,12 +113,13 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                                 outputData[i].append(int(row[1].iloc[ids[i]]))
                             except:
                                 outputData[i].append(888)
-
-
                         else:
                             outputData[i].append(row[1].iloc[ids[i]])
                     else:
-                        outputData[i].append(ids[i])
+                        if i == "Ресурс печати":
+                            outputData[i].append(int(ids[i]))
+                        else:
+                            outputData[i].append(ids[i])
             counter += 1
         df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
         df_out.to_excel(file_path_output, index=False)
@@ -134,7 +135,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                "Артикул": 0,
                "Наименование": 1,
                "Стоимость": 2,
-               "Ресурс печати": None,
+               "Ресурс печати": "0",
                "Количество на складе": "888",
                "Склад": "Москва"}
         # Словарь где будут хранится данные выгруженные из файла
@@ -168,7 +169,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                     else:
                         if i == "Вендор":
                             outputData[i].append(str(ids[i]).split()[0])
-                        elif i == "Количество на складе":
+                        elif i == "Количество на складе" or i == "Ресурс печати":
                             outputData[i].append(int(ids[i]))
                         else:
                             outputData[i].append(ids[i])
@@ -187,7 +188,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                "Артикул": 1,
                "Наименование": 3,
                "Стоимость": 4,
-               "Ресурс печати": None,
+               "Ресурс печати": "0",
                "Количество на складе": 9,
                "Склад": "Москва"}
         # Словарь где будут хранится данные выгруженные из файла
@@ -206,7 +207,6 @@ class MyWidget(QMainWindow, Ui_MainWindow):
         for row in df_inp.iterrows():
             if counter >= start_pos:
                 for i in ids:  # выбираем данные из столбцов, обрабатываем и добавляем в словарь
-
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             try:
@@ -225,7 +225,10 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                         else:
                             outputData[i].append(row[1].iloc[ids[i]])
                     else:
-                        outputData[i].append(ids[i])
+                        if i == "Ресурс печати":
+                            outputData[i].append(int(ids[i]))
+                        else:
+                            outputData[i].append(ids[i])
             counter += 1
         df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
         df_out.to_excel(file_path_output, index=False)
