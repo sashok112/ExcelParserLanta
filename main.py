@@ -173,7 +173,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                         else:
                             outputData[i].append(ids[i])
             counter += 1
-        df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
+        df_out = pd.DataFrame.from_dict(outputData)  # Записываем  словарь в файл
         df_out.to_excel(file_path_output, index=False)
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
