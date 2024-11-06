@@ -160,7 +160,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                 if str(row[1].iloc[0]) == "nan":
                     ids["Вендор"] = str(row[1].iloc[ids["Наименование"]])
                     continue
-                for i in ids:  # выбираем данные из столбцов, обрабатываем и добавляем в словарь
+                for i in ids:  # выбираем данные  из столбцов, обрабатываем и добавляем в словарь
                     if isinstance(ids[i], int):
                         if i == "Стоимость":
                             outputData[i].append(float(row[1].iloc[ids[i]]) * kurs)
