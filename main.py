@@ -7,7 +7,6 @@ from mainWindow import Ui_MainWindow
 
 # Список который отображается в выпадающем списке, те которые мы обрабатываем
 LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip", "Новые Айти-Решения"]
-FILE_OUTPUT = "./output.xlsx"
 
 
 class MyWidget(QMainWindow, Ui_MainWindow):
@@ -51,28 +50,28 @@ class MyWidget(QMainWindow, Ui_MainWindow):
             ComboBox выпадающий список проеряем айди и на каждый элемент запускаем соответсвующий скрипт
             """
             if self.comboBox.currentIndex() == 1:  # E2E4
-                self.t1 = threading.Thread(target=self.parse_E2E4, args=(self.filePath.text(), "./outputE2E4.xlsx",),
+                self.t1 = threading.Thread(target=self.parse_E2E4, args=(self.filePath.text(), "./outputE2E4.csv",),
                                            daemon=True)
                 self.t1.start()
             elif self.comboBox.currentIndex() == 2:  # Bulat
-                self.t1 = threading.Thread(target=self.parse_Bulat, args=(self.filePath.text(), "./outputBulat.xlsx",
+                self.t1 = threading.Thread(target=self.parse_Bulat, args=(self.filePath.text(), "./outputBulat.csv",
                                                                           float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
             elif self.comboBox.currentIndex() == 3:  # ZipZip
                 self.t1 = threading.Thread(target=self.parse_ZipZip, args=(self.filePath.text(),
-                                                                           "./outputZipZip.xlsx",
+                                                                           "./outputZipZip.csv",
                                                                            float(self.KursEdit.text())), daemon=True)
                 self.t1.start()
             elif self.comboBox.currentIndex() == 4:  # NewItSolutions
                 self.t1 = threading.Thread(target=self.parse_It_Solutions, args=(self.filePath.text(),
-                                                                                 "./outputNewItSolutions.xlsx",
+                                                                                 "./outputNewItSolutions.csv",
                                                                                  float(self.KursEdit.text())),
                                            daemon=True)
                 self.t1.start()
 
     def parse_E2E4(self, file_path_input, file_path_output):
         # Специфическая обработка для поставщика Е2Е4
-        process_file(file_path_input).to_excel(file_path_output, index=False)
+        process_file(file_path_input).to_csv(file_path_output, sep=';', index=False, encoding='utf-8')
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
@@ -121,7 +120,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                             outputData[i].append(ids[i])
             counter += 1
         df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
-        df_out.to_excel(file_path_output, index=False)
+        df_out.to_csv(file_path_output, sep=';', index=False, encoding='utf-8')
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")  # Меняем статус бар на обработаный
 
@@ -174,7 +173,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                             outputData[i].append(ids[i])
             counter += 1
         df_out = pd.DataFrame.from_dict(outputData)  # Записываем  словарь в файл
-        df_out.to_excel(file_path_output, index=False)
+        df_out.to_csv(file_path_output, sep=';', index=False, encoding='utf-8')
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
@@ -230,7 +229,7 @@ class MyWidget(QMainWindow, Ui_MainWindow):
                             outputData[i].append(ids[i])
             counter += 1
         df_out = pd.DataFrame.from_dict(outputData)  # Записываем словарь в файл
-        df_out.to_excel(file_path_output, index=False)
+        df_out.to_csv(file_path_output, sep=';', index=False, encoding='utf-8')
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
