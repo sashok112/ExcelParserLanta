@@ -6,7 +6,7 @@ import threading
 from mainWindow import Ui_MainWindow
 
 # Список который отображается в выпадающем списке, те которые мы обрабатываем
-LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip", "Новые Айти-Решения"]
+LIST_PRICES = [" ", "E2E4", "ТД Булат", "ZipZip", "Новые Айти-Решения", "Pixma"]
 
 
 
@@ -66,6 +66,12 @@ class MyWidget(QMainWindow, Ui_MainWindow):
             elif self.comboBox.currentIndex() == 4:  # NewItSolutions
                 self.t1 = threading.Thread(target=self.parse_It_Solutions, args=(self.filePath.text(),
                                                                                  "./outputNewItSolutions.csv",
+                                                                                 float(self.KursEdit.text())),
+                                           daemon=True)
+                self.t1.start()
+            elif self.comboBox.currentIndex() == 5:  # Pixma
+                self.t1 = threading.Thread(target=self.parse_Pixma, args=(self.filePath.text(),
+                                                                                 "./outputPixma.csv",
                                                                                  float(self.KursEdit.text())),
                                            daemon=True)
                 self.t1.start()
@@ -234,6 +240,57 @@ class MyWidget(QMainWindow, Ui_MainWindow):
         self.changeColourBar("(0,255,0,255)")
         self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
 
+    def parse_Pixma(self, file_path_input, file_path_output, kurs, start_pos=1):
+        # Специфическая обработка для поставщика ТД булат
+        manufacturer = "Pixma"
+        # Словарь где хранятся айди каждого из столбцов
+        ids = {"Поставщик": manufacturer,
+               "Вендор": 2,
+               "Артикул": 0,
+               "Наименование": 1,
+               "Стоимость": 3,
+               "Ресурс печати": "0",
+               "Количество на складе": 4,
+               "Склад": "Москва"}
+        # Словарь где будут хранится данные выгруженные из файла
+        outputData = {"Поставщик": [],
+                      "Вендор": [],
+                      "Артикул": [],
+                      "Наименование": [],
+                      "Стоимость": [],
+                      "Ресурс печати": [],
+                      "Количество на складе": [],
+                      "Склад": []}
+        # читаем файл в датафрейм
+        df_inp = pd.read_excel(file_path_input)
+        counter = 1
+        # читаем его построчно
+        for row in df_inp.iterrows():
+            if counter >= start_pos:  # проверяем на начало не с первой строки
+                for i in ids:  # выбираем данные  из столбцов, обрабатываем и добавляем в словарь
+                    if isinstance(ids[i], int):
+                        if i == "Стоимость":
+                            outputData[i].append(float(row[1].iloc[ids[i]]) * kurs)
+                        elif i == "Количество на складе":
+                            if isinstance(row[1].iloc[ids[i]], int):
+                                outputData[i].append(int(row[1].iloc[ids[i]]))
+                            else:
+                                outputData[i].append(888)
+                        else:
+                            outputData[i].append(row[1].iloc[ids[i]])
+                    else:
+                        if i == "Вендор":
+                            outputData[i].append(str(ids[i]).split()[0])
+                        elif i == "Ресурс печати":
+                            outputData[i].append(int(ids[i]))
+                        else:
+                            outputData[i].append(ids[i])
+            counter += 1
+        df_out = pd.DataFrame.from_dict(outputData)  # Записываем  словарь в файл
+        df_out.to_csv(file_path_output, sep=';', index=False, encoding='utf-8')
+        self.changeColourBar("(0,255,0,255)")
+        self.status_bar.showMessage(f"Данные сохранены в '{file_path_output}'.")
+
 
 def get_column(df, possible_names, default_value=None):
     """
@@ -243,6 +300,7 @@ def get_column(df, possible_names, default_value=None):
         if name in df.columns:
             return df[name]
     return pd.Series([default_value] * len(df))
+
 
 
 def process_file(file_path):
